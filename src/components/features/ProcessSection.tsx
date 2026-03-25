@@ -1,41 +1,25 @@
 import { Pen, Eye, PackageCheck, Sparkles } from 'lucide-react';
 import craftsmanImage from '@/assets/craftsman.jpg';
-
-const steps = [
-  {
-    icon: Pen,
-    title: 'Chọn Gạo & Viết Thư Pháp',
-    description: 'Nghệ nhân lựa chọn từng hạt gạo hoàn hảo và viết chữ thư pháp bằng mực đặc biệt',
-  },
-  {
-    icon: Eye,
-    title: 'Kiểm Tra Chất Lượng',
-    description: 'Mỗi hạt gạo được kiểm tra kỹ lưỡng dưới kính lúp để đảm bảo chữ rõ nét, đẹp mắt',
-  },
-  {
-    icon: PackageCheck,
-    title: 'Đóng Khung Cao Cấp',
-    description: 'Tranh được đóng trong khung kính cao cấp với bố cục nghệ thuật, sẵn sàng treo tường',
-  },
-  {
-    icon: Sparkles,
-    title: 'Giao Đến Tay Bạn',
-    description: 'Đóng gói cẩn thận, kèm chứng nhận và lời chúc phúc từ nghệ nhân',
-  },
-];
+import { PROCESS_SECTION } from '@/constants/process';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ProcessSection() {
+  const { language } = useLanguage();
+  const content = PROCESS_SECTION[language];
+
+  const icons = { Pen, Eye, PackageCheck, Sparkles };
+
   return (
-    <section className="py-20 bg-amber-50">
+    <section className="py-24 bg-gradient-to-b from-amber-50 to-white">
       <div className="container mx-auto px-4">
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">
-            Quy Trình <span className="text-gradient-gold">Tạo Tác</span>
+            {content.heading} <span className="bg-gradient-to-r from-gold-600 via-amber-500 to-gold-600 bg-clip-text text-transparent">{content.headingHighlight}</span>
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-gold-400 to-gold-600 mx-auto mb-6"></div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Mỗi tác phẩm trải qua quy trình nghiêm ngặt để đảm bảo chất lượng hoàn hảo
+            {content.subtitle}
           </p>
         </div>
 
@@ -45,7 +29,7 @@ export default function ProcessSection() {
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img 
                 src={craftsmanImage} 
-                alt="Nghệ nhân đang viết thư pháp trên hạt gạo" 
+                alt={language === 'vi' ? 'Nghệ nhân đang viết thư pháp trên hạt gạo' : 'Artisan writing calligraphy on rice grains'}
                 className="w-full h-auto"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
@@ -54,16 +38,17 @@ export default function ProcessSection() {
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-2xl p-6 hidden lg:block">
               <div className="text-center">
-                <div className="text-4xl font-bold text-gradient-gold mb-1">15+</div>
-                <div className="text-sm text-gray-600 font-medium">Năm Kinh Nghiệm</div>
+                <div className="text-4xl font-bold bg-gradient-to-r from-gold-600 via-amber-500 to-gold-600 bg-clip-text text-transparent mb-1">{content.yearsExperience}</div>
+                <div className="text-sm text-gray-600 font-medium">{content.yearsLabel}</div>
               </div>
             </div>
           </div>
 
           {/* Steps Side */}
           <div className="space-y-6 order-1 lg:order-2">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
+            {content.steps.map((step, index) => {
+              const Icon = icons[step.icon as keyof typeof icons];
+              
               return (
                 <div 
                   key={index}
@@ -83,10 +68,10 @@ export default function ProcessSection() {
 
                   {/* Content */}
                   <div className="flex-1 pt-1">
-                    <h3 className="text-xl font-display font-semibold text-gray-900 mb-2 group-hover:text-gold-600 transition-colors">
+                    <h3 className="text-xl md:text-2xl font-display font-semibold text-gray-900 mb-2 group-hover:text-gold-600 transition-colors">
                       {step.title}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-base md:text-lg text-gray-600 leading-relaxed text-justify">
                       {step.description}
                     </p>
                   </div>
