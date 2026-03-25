@@ -1,5 +1,5 @@
 import { ShieldCheck, Truck, Award, Headphones, Lock, Package } from 'lucide-react';
-import { GUARANTEES } from '@/constants/content';
+import { GUARANTEES } from '@/constants/guarantees';
 
 const iconMap: Record<string, any> = {
   ShieldCheck,

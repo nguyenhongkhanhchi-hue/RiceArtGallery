@@ -1,6 +1,6 @@
 import { Heart, TrendingUp, Users } from 'lucide-react';
 import charityImage from '@/assets/charity.jpg';
-import { CHARITY_SECTION } from '@/constants/content';
+import { CHARITY_SECTION } from '@/constants/charity';
 
 export default function CharitySection() {
   return (
