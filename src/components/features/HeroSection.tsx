@@ -1,8 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, Star } from 'lucide-react';
 import heroImage from '@/assets/hero-rice-art.jpg';
+import { HERO_SECTION } from '@/constants/hero';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function HeroSection() {
+  const { language } = useLanguage();
+  const content = HERO_SECTION[language];
+  
   const scrollToOrder = () => {
     document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -24,25 +29,23 @@ export default function HeroSection() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-gold-400/20 backdrop-blur-sm border border-gold-400/30 rounded-full px-4 py-2">
               <Star className="h-4 w-4 text-gold-300 fill-gold-300" />
-              <span className="text-sm font-medium text-gold-100">Nghệ Thuật Thủ Công Cao Cấp</span>
+              <span className="text-sm font-medium text-gold-100">{content.badge}</span>
             </div>
 
             {/* Main Heading */}
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-tight">
-                Tranh Gạo
-                <span className="block text-gradient-gold">May Mắn</span>
+                {content.title}
+                <span className="block text-gradient-gold">{content.titleHighlight}</span>
               </h1>
               <p className="text-xl md:text-2xl text-amber-100 font-medium">
-                Thư Pháp Vi Tế Trên Từng Hạt Gạo
+                {content.subtitle}
               </p>
             </div>
 
             {/* Description */}
             <p className="text-lg text-amber-100/90 leading-relaxed max-w-xl">
-              Mỗi tác phẩm là sự kết hợp độc đáo giữa <strong className="text-white">nghệ thuật thư pháp truyền thống</strong> và 
-              <strong className="text-white"> tài năng siêu phàm</strong> của nghệ nhân. Mang đến <strong className="text-gold-300">tài lộc, bình an</strong> và 
-              <strong className="text-gold-300"> thịnh vượng</strong> cho gia đình bạn.
+              {content.description}
             </p>
 
             {/* CTA Buttons */}
@@ -53,7 +56,7 @@ export default function HeroSection() {
                 className="bg-gold-500 hover:bg-gold-600 text-amber-900 font-semibold text-lg px-8 py-6 shadow-2xl hover:shadow-gold-500/50 transition-all shimmer-effect group"
               >
                 <Sparkles className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                Đặt Hàng Ngay
+                {content.ctaPrimary}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button 
@@ -62,24 +65,18 @@ export default function HeroSection() {
                 onClick={() => document.getElementById('story')?.scrollIntoView({ behavior: 'smooth' })}
                 className="border-2 border-gold-400/50 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-semibold text-lg px-8 py-6"
               >
-                Khám Phá Thêm
+                {content.ctaSecondary}
               </Button>
             </div>
 
             {/* Trust Indicators */}
             <div className="flex flex-wrap gap-8 justify-center lg:justify-start pt-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gold-300">5000+</div>
-                <div className="text-sm text-amber-100/80">Khách Hài Lòng</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gold-300">100%</div>
-                <div className="text-sm text-amber-100/80">Thủ Công</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gold-300">4.9★</div>
-                <div className="text-sm text-amber-100/80">Đánh Giá</div>
-              </div>
+              {content.stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-3xl font-bold text-gold-300">{stat.value}</div>
+                  <div className="text-sm text-amber-100/80">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -95,18 +92,7 @@ export default function HeroSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-amber-900/40 via-transparent to-transparent" />
             </div>
             
-            {/* Floating Badge */}
-            <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-2xl p-6 hidden lg:block">
-              <div className="flex items-center gap-3">
-                <div className="bg-gold-100 rounded-full p-3">
-                  <Sparkles className="h-6 w-6 text-gold-600" />
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900">Giới Hạn</div>
-                  <div className="text-sm text-gray-600">Chỉ 50 bộ/tháng</div>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
