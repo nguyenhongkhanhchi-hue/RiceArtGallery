@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { PRICING_PACKAGES } from '@/constants/content';
+import { PRICING_PACKAGES } from '@/constants/pricing';
+import { useOrder } from '@/contexts/OrderContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const orderSchema = z.object({
   name: z.string().min(2, 'Vui lòng nhập họ tên (ít nhất 2 ký tự)'),
@@ -24,6 +26,10 @@ const orderSchema = z.object({
 type OrderFormData = z.infer<typeof orderSchema>;
 
 export default function OrderForm() {
+  const { language } = useLanguage();
+  const { selectedPackage } = useOrder();
+  const packages = PRICING_PACKAGES[language];
+  
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]);
@@ -39,14 +45,19 @@ export default function OrderForm() {
     resolver: zodResolver(orderSchema),
   });
 
-  const selectedPackage = watch('package');
+  // Auto-fill selected package
+  useEffect(() => {
+    if (selectedPackage) {
+      setValue('package', selectedPackage);
+    }
+  }, [selectedPackage, setValue]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     if (uploadedFiles.length + files.length > 5) {
-      toast.error('Tối đa 5 hình ảnh');
+      toast.error(language === 'vi' ? 'Tối đa 5 hình ảnh' : 'Maximum 5 images');
       return;
     }
 
@@ -55,7 +66,7 @@ export default function OrderForm() {
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         if (file.size > 5 * 1024 * 1024) {
-          throw new Error(`File ${file.name} quá lớn (tối đa 5MB)`);
+          throw new Error(`File ${file.name} ${language === 'vi' ? 'quá lớn (tối đa 5MB)' : 'too large (max 5MB)'}`);
         }
 
         const fileExt = file.name.split('.').pop();
@@ -77,10 +88,10 @@ export default function OrderForm() {
 
       const results = await Promise.all(uploadPromises);
       setUploadedFiles((prev) => [...prev, ...results]);
-      toast.success(`Đã tải lên ${results.length} hình ảnh`);
+      toast.success(language === 'vi' ? `Đã tải lên ${results.length} hình ảnh` : `Uploaded ${results.length} images`);
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Lỗi khi tải hình ảnh');
+      toast.error(error.message || (language === 'vi' ? 'Lỗi khi tải hình ảnh' : 'Error uploading images'));
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -89,7 +100,7 @@ export default function OrderForm() {
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-    toast.success('Đã xóa hình ảnh');
+    toast.success(language === 'vi' ? 'Đã xóa hình ảnh' : 'Image removed');
   };
 
   const onSubmit = async (data: OrderFormData) => {
@@ -107,38 +118,88 @@ export default function OrderForm() {
       );
 
       if (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra';
+        const errorMessage = error instanceof Error ? error.message : (language === 'vi' ? 'Có lỗi xảy ra' : 'An error occurred');
         throw new Error(errorMessage);
       }
 
-      toast.success('🎉 Đặt hàng thành công!', {
-        description: 'Chúng tôi đã nhận được đơn hàng và sẽ liên hệ bạn sớm nhất.',
+      toast.success(language === 'vi' ? '🎉 Đặt hàng thành công!' : '🎉 Order successful!', {
+        description: language === 'vi' ? 'Chúng tôi đã nhận được đơn hàng và sẽ liên hệ bạn sớm nhất.' : 'We received your order and will contact you soon.',
       });
 
       reset();
       setUploadedFiles([]);
     } catch (error: any) {
       console.error('Order error:', error);
-      toast.error('Lỗi khi gửi đơn hàng', {
-        description: error.message || 'Vui lòng thử lại sau',
+      toast.error(language === 'vi' ? 'Lỗi khi gửi đơn hàng' : 'Error sending order', {
+        description: error.message || (language === 'vi' ? 'Vui lòng thử lại sau' : 'Please try again later'),
       });
     } finally {
       setSubmitting(false);
     }
   };
 
+  const labels = {
+    vi: {
+      heading: 'Form Đặt Hàng',
+      headingHighlight: 'Đặt Hàng',
+      subtitle: 'Điền thông tin bên dưới, chúng tôi sẽ liên hệ bạn trong vòng 24h',
+      name: 'Họ và Tên',
+      phone: 'Số Điện Thoại',
+      email: 'Email',
+      address: 'Địa Chỉ Nhận Hàng',
+      package: 'Chọn Gói Sản Phẩm',
+      message: 'Lời Nhắn',
+      messagePlaceholder: 'Ghi chú thêm về đơn hàng (ví dụ: muốn chọn chữ gì, thời gian nhận hàng...)',
+      upload: 'Hình Ảnh Đính Kèm',
+      uploadDesc: '(Tùy chọn, tối đa 5 ảnh)',
+      uploadButton: 'Nhấn để chọn hình ảnh',
+      uploading: 'Đang tải...',
+      submit: '✨ Gửi Đơn Hàng Ngay',
+      submitting: 'Đang Gửi...',
+      terms: 'Bằng cách đặt hàng, bạn đồng ý với',
+      termsLink: 'Điều khoản dịch vụ',
+      termsEnd: 'của chúng tôi',
+    },
+    en: {
+      heading: 'Order Form',
+      headingHighlight: 'Order',
+      subtitle: 'Fill in the information below, we will contact you within 24 hours',
+      name: 'Full Name',
+      phone: 'Phone Number',
+      email: 'Email',
+      address: 'Delivery Address',
+      package: 'Select Package',
+      message: 'Message',
+      messagePlaceholder: 'Additional notes about your order (e.g., custom text, delivery time...)',
+      upload: 'Image Attachments',
+      uploadDesc: '(Optional, max 5 images)',
+      uploadButton: 'Click to select images',
+      uploading: 'Uploading...',
+      submit: '✨ Submit Order Now',
+      submitting: 'Submitting...',
+      terms: 'By ordering, you agree to our',
+      termsLink: 'Terms of Service',
+      termsEnd: '',
+    },
+  };
+
+  const t = labels[language];
+
   return (
-    <section id="order-form" className="py-20 bg-gradient-to-b from-white to-amber-50">
+    <section id="order-form" className="py-24 bg-gradient-to-b from-white to-amber-50/30">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           {/* Heading */}
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">
-              Form <span className="text-gradient-gold">Đặt Hàng</span>
+              {language === 'vi' ? 'Form ' : ''}
+              <span className="bg-gradient-to-r from-gold-600 via-amber-500 to-gold-600 bg-clip-text text-transparent">
+                {t.headingHighlight}
+              </span>
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-400 to-gold-600 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600">
-              Điền thông tin bên dưới, chúng tôi sẽ liên hệ bạn trong vòng 24h
+              {t.subtitle}
             </p>
           </div>
 
@@ -148,12 +209,12 @@ export default function OrderForm() {
               {/* Name */}
               <div>
                 <Label htmlFor="name" className="text-lg font-semibold text-gray-900">
-                  Họ và Tên <span className="text-red-500">*</span>
+                  {t.name} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder="Nguyễn Văn A"
+                  placeholder={language === 'vi' ? 'Nguyễn Văn A' : 'John Doe'}
                   className="mt-2 h-14 text-lg border-2 border-gray-300 focus:border-gold-500"
                 />
                 {errors.name && (
@@ -165,7 +226,7 @@ export default function OrderForm() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="phone" className="text-lg font-semibold text-gray-900">
-                    Số Điện Thoại <span className="text-red-500">*</span>
+                    {t.phone} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="phone"
@@ -180,7 +241,7 @@ export default function OrderForm() {
 
                 <div>
                   <Label htmlFor="email" className="text-lg font-semibold text-gray-900">
-                    Email <span className="text-red-500">*</span>
+                    {t.email} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="email"
@@ -198,12 +259,12 @@ export default function OrderForm() {
               {/* Address */}
               <div>
                 <Label htmlFor="address" className="text-lg font-semibold text-gray-900">
-                  Địa Chỉ Nhận Hàng <span className="text-red-500">*</span>
+                  {t.address} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="address"
                   {...register('address')}
-                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                  placeholder={language === 'vi' ? 'Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành' : 'Street, Ward, District, City'}
                   className="mt-2 h-14 text-lg border-2 border-gray-300 focus:border-gold-500"
                 />
                 {errors.address && (
@@ -214,14 +275,14 @@ export default function OrderForm() {
               {/* Package */}
               <div>
                 <Label htmlFor="package" className="text-lg font-semibold text-gray-900">
-                  Chọn Gói Sản Phẩm <span className="text-red-500">*</span>
+                  {t.package} <span className="text-red-500">*</span>
                 </Label>
-                <Select onValueChange={(value) => setValue('package', value)}>
+                <Select onValueChange={(value) => setValue('package', value)} value={watch('package')}>
                   <SelectTrigger className="mt-2 h-14 text-lg border-2 border-gray-300 focus:border-gold-500">
-                    <SelectValue placeholder="-- Chọn gói --" />
+                    <SelectValue placeholder={language === 'vi' ? '-- Chọn gói --' : '-- Select package --'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRICING_PACKAGES.map((pkg) => (
+                    {packages.map((pkg) => (
                       <SelectItem key={pkg.name} value={pkg.name} className="text-lg">
                         {pkg.name} - {pkg.price}₫ 
                         {pkg.popular && ' 🔥'}
@@ -237,12 +298,12 @@ export default function OrderForm() {
               {/* Message */}
               <div>
                 <Label htmlFor="message" className="text-lg font-semibold text-gray-900">
-                  Lời Nhắn (Tùy chọn)
+                  {t.message} {t.uploadDesc}
                 </Label>
                 <Textarea
                   id="message"
                   {...register('message')}
-                  placeholder="Ghi chú thêm về đơn hàng (ví dụ: muốn chọn chữ gì, thời gian nhận hàng...)"
+                  placeholder={t.messagePlaceholder}
                   className="mt-2 min-h-[120px] text-lg border-2 border-gray-300 focus:border-gold-500"
                 />
               </div>
@@ -250,7 +311,7 @@ export default function OrderForm() {
               {/* File Upload */}
               <div>
                 <Label className="text-lg font-semibold text-gray-900">
-                  Hình Ảnh Đính Kèm (Tùy chọn, tối đa 5 ảnh)
+                  {t.upload} {t.uploadDesc}
                 </Label>
                 <div className="mt-2">
                   <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-gold-500 hover:bg-gold-50 transition-colors">
@@ -258,13 +319,13 @@ export default function OrderForm() {
                       {uploading ? (
                         <>
                           <Loader2 className="h-8 w-8 mx-auto text-gold-600 animate-spin" />
-                          <span className="text-sm text-gray-600 mt-2">Đang tải...</span>
+                          <span className="text-sm text-gray-600 mt-2">{t.uploading}</span>
                         </>
                       ) : (
                         <>
                           <Upload className="h-8 w-8 mx-auto text-gray-400" />
                           <span className="text-sm text-gray-600 mt-2">
-                            Nhấn để chọn hình ảnh
+                            {t.uploadButton}
                           </span>
                         </>
                       )}
@@ -314,19 +375,19 @@ export default function OrderForm() {
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    Đang Gửi...
+                    {t.submitting}
                   </>
                 ) : (
-                  '✨ Gửi Đơn Hàng Ngay'
+                  t.submit
                 )}
               </Button>
 
               <p className="text-center text-sm text-gray-500 mt-4">
-                Bằng cách đặt hàng, bạn đồng ý với{' '}
+                {t.terms}{' '}
                 <a href="#" className="text-gold-600 hover:underline">
-                  Điều khoản dịch vụ
-                </a>{' '}
-                của chúng tôi
+                  {t.termsLink}
+                </a>
+                {t.termsEnd && ` ${t.termsEnd}`}
               </p>
             </div>
           </form>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
+import { useOrder } from '@/contexts/OrderContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function StickyOrderButton() {
   const [isVisible, setIsVisible] = useState(false);
+  const { scrollToOrder } = useOrder();
+  const { language } = useLanguage();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -18,27 +21,27 @@ export default function StickyOrderButton() {
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
-  const scrollToOrderForm = () => {
-    document.getElementById('order-form')?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
-  };
-
   return (
     <div
       className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
       }`}
     >
-      <Button
-        onClick={scrollToOrderForm}
-        size="lg"
-        className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-white font-bold text-lg px-8 py-7 shadow-2xl hover:shadow-gold-500/50 rounded-full shimmer-effect group"
+      <button
+        onClick={scrollToOrder}
+        className="relative group"
       >
-        <ShoppingCart className="mr-2 h-6 w-6 group-hover:animate-bounce" />
-        Đặt Hàng Ngay
-      </Button>
+        {/* Pulse Animation */}
+        <div className="absolute inset-0 bg-gold-500 rounded-full animate-ping opacity-75"></div>
+        
+        {/* Button */}
+        <div className="relative flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-white rounded-full shadow-2xl hover:shadow-gold-500/50 transition-all duration-300 group-hover:scale-110">
+          <ShoppingCart className="h-6 w-6 group-hover:animate-bounce" />
+          <span className="font-bold text-lg whitespace-nowrap">
+            {language === 'vi' ? 'ĐẶT HÀNG NGAY' : 'ORDER NOW'}
+          </span>
+        </div>
+      </button>
     </div>
   );
 }
