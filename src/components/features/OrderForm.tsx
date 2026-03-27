@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import { Upload, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -277,18 +277,17 @@ export default function OrderForm() {
                 <Label htmlFor="package" className="text-lg font-semibold text-gray-900">
                   {t.package} <span className="text-red-500">*</span>
                 </Label>
-                <Select onValueChange={(value) => setValue('package', value)} value={watch('package')}>
-                  <SelectTrigger className="mt-2 h-14 text-lg border-2 border-gray-300 focus:border-gold-500">
-                    <SelectValue placeholder={language === 'vi' ? '-- Chọn gói --' : '-- Select package --'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {packages.map((pkg) => (
-                      <SelectItem key={pkg.name} value={pkg.name} className="text-lg">
-                        {pkg.name} - {pkg.price}₫ 
-                        {pkg.popular && ' 🔥'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <Select
+                  id="package"
+                  {...register('package')}
+                  className="mt-2"
+                >
+                  <option value="">{language === 'vi' ? '-- Chọn gói --' : '-- Select package --'}</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.name} value={pkg.name}>
+                      {pkg.name} - {pkg.price}₫{pkg.popular && ' 🔥'}
+                    </option>
+                  ))}
                 </Select>
                 {errors.package && (
                   <p className="text-red-500 text-sm mt-1">{errors.package.message}</p>
